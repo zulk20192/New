@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kios Cell - Solusi Pembayaran Digital</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #f5f3ff;
+            --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #f1f5f9;
+            --radius-lg: 24px;
+            --radius-md: 16px;
+            --radius-sm: 10px;
+            --shadow-sm: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+            --shadow-md: 0 10px 25px -5px rgba(79, 70, 229, 0.08), 0 8px 16px -6px rgba(79, 70, 229, 0.04);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--background);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 20px;
+            background: var(--primary-gradient);
+            padding: 28px 24px;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            top: -50px;
+            right: -35px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .header p {
+            font-size: 11px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.75);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .status-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+        .operator-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 100px;
+            background: #f1f5f9;
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .network-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #10b981;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .grid-item {
+            background-color: var(--surface);
+            border-radius: var(--radius-md);
+            padding: 16px 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid var(--border-color);
+            height: 102px;
+            cursor: pointer;
+        }
+
+        .icon-wrapper {
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 36px;
+            width: 36px;
+            background: var(--primary-light);
+            border-radius: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .icon-wrapper svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: var(--primary);
+            stroke-width: 2.2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .grid-item span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #334155;
+            line-height: 1.3;
+            text-align: center;
+        }
+
+        @media (hover: hover) {
+            .grid-item:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.05);
+                border-color: rgba(79, 70, 229, 0.2);
+            }
+            .grid-item:hover .icon-wrapper {
+                background: var(--primary-gradient);
+            }
+            .grid-item:hover .icon-wrapper svg {
+                stroke: #ffffff;
+            }
+        }
+
+        .grid-item:active {
+            transform: scale(0.95);
+            background-color: var(--primary-light);
+        }
+
+        .page-content {
+            display: none;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            text-align: left;
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .btn-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--primary-light);
+            border: none;
+            color: var(--primary);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 20px;
+            padding: 8px 14px;
+            border-radius: 100px;
+            transition: all 0.2s;
+        }
+
+        .btn-back:active {
+            transform: scale(0.95);
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.75px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 16px;
+            border-radius: var(--radius-md);
+            border: 1.5px solid var(--border-color);
+            background: #f8fafc;
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-main);
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+
+        .group-header {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 16px 0 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            max-height: 40vh;
+            overflow-y: auto;
+            padding: 4px 6px 4px 2px;
+            margin-bottom: 12px;
+        }
+
+        @media (min-width: 380px) {
+            .product-grid {
+                grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+                gap: 10px;
+            }
+        }
+
+        .product-grid::-webkit-scrollbar {
+            width: 5px;
+        }
+        .product-grid::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .product-grid::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 20px;
+        }
+
+        .product-item {
+            border: 1.5px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--surface);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+            overflow: hidden;
+            gap: 12px;
+        }
+
+        .product-item-left {
+            width: 100%;
+            padding-right: 20px;
+        }
+
+        .prod-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+
+        .prod-desc {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .prod-price {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--primary);
+            white-space: nowrap;
+            background: var(--primary-light);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            align-self: flex-end;
+            transition: all 0.2s;
+        }
+
+        .product-item::after {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 12px;
+            font-weight: 900;
+            color: var(--primary);
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease;
+        }
+
+        .product-item.selected {
+            border-color: var(--primary);
+            background: #fdfcff;
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.08);
+            transform: translateY(-1px);
+        }
+
+        .product-item.selected .prod-price {
+            background: var(--primary-gradient);
+            color: #ffffff;
+        }
+
+        .product-item.selected::after {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--primary-gradient);
+            color: #ffffff;
+            border: none;
+            padding: 18px;
+            border-radius: var(--radius-md);
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 12px;
+            box-shadow: 0 8px 20px -6px rgba(79, 70, 229, 0.4);
+            transition: all 0.2s;
+        }
+
+        .btn-submit:active {
+            transform: scale(0.98);
+            box-shadow: none;
+        }
+
+        .btn-submit:disabled {
+            background: #cbd5e1;
+            color: #94a3b8;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .no-results {
+            display: none;
+            grid-column: span 3;
+            padding: 40px 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+            font-weight: 500;
+            text-align: center;
+        }
+
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-top: 30px;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <h1>Kios Cell</h1>
+            <p>by Velocity Developer</p>
+        </header>
+
+        <div class="status-container">
+            <div id="operator-badge" class="operator-badge">Menunggu nomor...</div>
+            <div class="network-status">
+                <div id="status-dot" class="status-dot"></div>
+                <span id="status-text">Online</span>
+            </div>
+        </div>
+
+        <div id="mainView">
+            <nav class="grid-container" id="menuGrid">
+                <div class="grid-item" data-id="pulsa" data-name="pulsa">
+                    <div class="icon-wrapper"><svg viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg></div>
+                    <span>Pulsa</span>
+                </div>
+
+                <div class="grid-item" data-id="data" data-name="paket data">
+                    <div class="icon-wrapper"><svg viewBox="0 0 24 24"><line x1="12" y1="20" x2="12" y2="10"></line><line x1="18" y1="20" x2="18" y2="4"></line><line x1="6" y1="20" x2="6" y2="16"></line></svg></div>
+                    <span>Paket Data</span>
+                </div>
+                
+                <div class="grid-item" data-id="nelpon" data-name="telepon">
+                    <div class="icon-wrapper"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg></div>
+                    <span>Telepon</span>
+                </div>
+
+                <div class="grid-item" data-id="sms" data-name="sms">
+                    <div class="icon-wrapper"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg></div>
+                    <span>SMS</span>
+                </div>     
+
+                <div class="grid-item" data-id="pulsa transfer" data-name="pulsa transfer">
+                    <div class="icon-wrapper"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"></polyline><path d="M3 11V9a4 4 0 0 1 4-4h14"></path><polyline points="7 23 3 19 7 15"></polyline><path d="M21 13v2a4 4 0 0 1-4 4H3"></path></svg></div>
+                    <span>Pulsa Transfer</span>
+                </div>            
+
+                <div class="grid-item" data-id="masa aktif" data-name="masa aktif">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </div>
+                    <span>Masa Aktif</span>
+                </div>
+                
+                <div class="grid-item" data-id="pln" data-name="token pln listrik">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+                    </div>
+                    <span>Token PLN</span>
+                </div>
+
+                <div class="grid-item" data-id="game" data-name="top up game diamond ml pubg">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"></rect><path d="M6 12h4M8 10v4M15 11h.01M18 13h.01"></path></svg>
+                    </div>
+                    <span>Top Up Game</span>
+                </div>
+
+                <div class="grid-item" data-id="ewallet" data-name="e-wallet dana gopay ovo linkaja">
+                    <div class="icon-wrapper">
+                        <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+                    </div>
+                    <span>E-Wallet</span>
+                </div>
+
+                <div id="noResults" class="no-results">Layanan tidak ditemukan.</div>
+            </nav>
+        </div>
+
+        <div id="transactionPage" class="page-content">
+            <button class="btn-back" id="btnBack">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Kembali
+            </button>
+
+            <h2 id="pageTitle" class="page-title">Layanan</h2>
+
+            <div class="form-group">
+                <label id="inputLabel" for="customerInput">Nomor Tujuan</label>
+                <input type="tel" id="customerInput" class="form-control" placeholder="Contoh: 081234567890">
+            </div>
+
+            <div class="form-group">
+                <label id="productLabel">Pilih Produk</label>
+                <input type="text" id="searchProduct" class="form-control" placeholder="Cari nominal atau nama produk..." style="margin-bottom: 12px; font-size: 14px; padding: 12px 16px; font-weight: normal;">
+                
+                <div class="product-grid" id="productGrid"></div>
+            </div>
+
+            <button class="btn-submit" id="btnSubmit" disabled>Proses Transaksi</button>
+        </div>
+
+        <footer class="footer">
+            Design by Velocity Developer
+        </footer>
+    </div>
+
+<script>
+let produkTerpilih = null;
+let kategoriAktif = 'pulsa';
+let operatorAktif = '';
+let produkData = {};
+
+const backupProdukData = {
+    "pulsa": {
+        "Telkomsel": [
+            {kode:'S5',nama:'Pulsa Reguler 5.000',harga:7000,deskripsi:'Menambah masa aktif 7 hari', promo: false},
+            {kode:'S10',nama:'Pulsa Reguler 10.000',harga:10800,deskripsi:'Menambah masa aktif 15 hari', promo: true},
+            {kode:'S15',nama:'Pulsa Reguler 15.000',harga:15900,deskripsi:'Menambah masa aktif 30 hari', promo: false},
+            {kode:'SP5',nama:'Pulsa Promo 5.000',harga:5500,deskripsi:'Diskon di bawah harga modal', promo: true},
+            {kode:'SP10',nama:'Pulsa Promo 10.000',harga:10200,deskripsi:'Hot promo khusus agen', promo: true},
+            {kode:'BYU5',nama:'Pulsa by.U 5.000',harga:5900,deskripsi:'Pulsa untung khusus by.U', promo: true},
+            {kode:'BYU10',nama:'Pulsa by.U 10.000',harga:10900,deskripsi:'Pulsa reguler kuota by.U', promo: false}
+        ],
+        "XL": [
+            {kode:'XL5',nama:'Pulsa Reguler 5.000',harga:7000,deskripsi:'Masa aktif +7 hari', promo: false},
+            {kode:'XL10',nama:'Pulsa Reguler 10.000',harga:11900,deskripsi:'Masa aktif +15 hari', promo: true}
+        ],
+        "Axis": [
+            {kode:'AX5',nama:'Pulsa Reguler 5.000',harga:6900,deskripsi:'Masa aktif +7 hari', promo: true}
+        ],
+        "Indosat": [
+            {kode:'I5',nama:'Pulsa Reguler 5.000',harga:7000,deskripsi:'Masa aktif +7 hari', promo: false}
+        ],
+        "TRI": [
+            {kode:'T5',nama:'Pulsa Reguler 5.000',harga:6800,deskripsi:'Masa aktif +7 hari', promo: true}
+        ]
+    },
+    "data": {
+        "Telkomsel":[
+            {kode:'DX1',nama:'Internet Flash 1GB / 3 Hari',harga:9000,deskripsi:'Kuota Utama Flash Nasional', promo:true},
+            {kode:'DX2',nama:'Internet Flash 5GB / 7 Hari',harga:24000,deskripsi:'Kuota Flash 24 Jam'},
+            {kode:'DU1',nama:'Unlimited Apps 10GB / 30 Hari',harga:65000,deskripsi:'Kuota Apps Sosmed Tanpa Batas'},
+            {kode:'DXP1',nama:'Promo Internet 2GB / 3 Hari',harga:11000,deskripsi:'Kuota Utama Promo', promo:true},
+            {kode:'BYD1',nama:'Yang Bikin Nempel 2GB / 3 Hari',harga:10000,deskripsi:'Kuota Utama by.U Full 24 Jam'}
+        ],
+        "XL":[
+            {kode:'XLX1',nama:'Xtra Combo Flex 5GB',harga:18000,deskripsi:'Kuota Flex Utama'}
+        ],
+        "Axis":[
+            {kode:'AXB1',nama:'Kuota Bronet 2GB / 3 Hari',harga:8500,deskripsi:'Kuota Bronet AXIS'}
+        ],
+        "Indosat":[
+            {kode:'IF1',nama:'Freedom Internet 3GB / 5 Hari',harga:14000,deskripsi:'Murni Kuota Utama'}
+        ],
+        "TRI":[
+            {kode:'TF1',nama:'AlwaysOn 3GB / 30 Hari',harga:15000,deskripsi:'Kuota Aktif Terus'}
+        ]
+    },
+    "pulsa transfer": { 
+        "Telkomsel": [{kode:'TP5',nama:'Transfer Murah 5.000',harga:6200,deskripsi:'Tidak menambah masa aktif'}], 
+        "XL": [{kode:'XLP5',nama:'Transfer Murah 5.000',harga:6100,deskripsi:''}],
+        "Axis": [], "Indosat": [], "TRI": []
+    },
+    "nelpon": { 
+        "Telkomsel": [{kode:'N30',nama:'Paket KringKring 30 Mnt',harga:4800,deskripsi:''}],
+        "XL": [], "Axis": [], "Indosat": [], "TRI": []
+    },
+    "sms": { 
+        "Telkomsel": [{kode:'S50',nama:'Sms Mania 50 SMS',harga:3000,deskripsi:''}],
+        "XL": [], "Axis": [], "Indosat": [], "TRI": []
+    },
+    "masa aktif": { 
+        "Telkomsel": [{kode:'MA7',nama:'Perpanjang Tsel 7 Hari',harga:5000,deskripsi:''}],
+        "XL": [], "Axis": [], "Indosat": [], "TRI": []
+    },
+    "pln": [
+        {kode:'PLN20', nama:'Token PLN 20.000', harga:21500, deskripsi:'Token Listrik Elektrik Prabayar'},
+        {kode:'PLN50', nama:'Token PLN 50.000', harga:51500, deskripsi:'Token Listrik Elektrik Prabayar'},
+        {kode:'PLN100', nama:'Token PLN 100.000', harga:101500, deskripsi:'Token Listrik Elektrik Prabayar'}
+    ],
+    "game": [
+        {kode:'ML86', nama:'86 Diamonds Mobile Legends', harga:20000, deskripsi:'Top Up Instant via ID'},
+        {kode:'PUBG50', nama:'50 Unknown Cash PUBG', harga:15000, deskripsi:'Top Up Instant via ID'}
+    ],
+    "ewallet": [
+        {kode:'DANA10', nama:'Dana Saldo 10.000', harga:11500, deskripsi:'Top Up Dana Dompet Digital'},
+        {kode:'GOPAY10', nama:'Gopay Saldo 10.000', harga:11500, deskripsi:'Top Up Gopay Customer'}
+    ]
+};
+
+produkData = backupProdukData;
+
+function sinkronisasiProduk() {
+    fetch('api/ambil_produk_ready.php')
+    .then(res => { if(!res.ok) throw new Error(); return res.json(); })
+    .then(data => { 
+        if(data && Object.keys(data).length > 0) {
+            produkData = data; 
+        } else {
+            throw new Error();
+        }
+        render(); 
+    })
+    .catch(() => { 
+        console.log('Menggunakan deep-copy data lokal Kios Cell.'); 
+        produkData = JSON.parse(JSON.stringify(backupProdukData));
+        render(); 
+    });
+}
+
+window.addEventListener('online', perbaruiStatusInternet);
+window.addEventListener('offline', perbaruiStatusInternet);
+
+function perbaruiStatusInternet() {
+    let dot = document.getElementById('status-dot');
+    let txt = document.getElementById('status-text');
+    if (navigator.onLine) {
+        txt.innerText = "Online";
+        dot.style.background = "#10b981"; 
+    } else {
+        txt.innerText = "Offline";
+        dot.style.background = "#ef4444"; 
+    }
+    validasi();
+}
+
+function deteksiOperator(no){
+    let badge = document.getElementById('operator-badge');
+    
+    if(['pln', 'game', 'ewallet'].includes(kategoriAktif)) {
+        if(no.length >= 4) {
+            badge.innerText = 'Format Validated'; badge.style.color = '#fff'; badge.style.background = '#4f46e5';
+        } else {
+            badge.innerText = 'Menunggu ID/Nomor...'; badge.style.color = '#64748b'; badge.style.background = '#f1f5f9';
+        }
+        render();
+        validasi();
+        return;
+    }
+
+    if(no.length >= 4){
+        let prefix = no.substring(0,4);
+        
+        // Seluruh prefix Telkomsel (Termasuk by.U dan Promo) sekarang diarahkan ke satu kelompok: 'Telkomsel'
+        if(['0811','0812','0813','0821','0822','0851','0852','0853'].includes(prefix)){
+            operatorAktif='Telkomsel'; 
+            badge.innerText='Telkomsel'; 
+            badge.style.color='#fff'; 
+            badge.style.background='#ef4444';
+        }
+        else if(['0817','0818','0819','0877','0878'].includes(prefix)){
+            operatorAktif='XL'; badge.innerText='XL Axiata'; badge.style.color='#fff'; badge.style.background='#2563eb';
+        }
+        else if(['0814','0815','0816','0855','0856','0857'].includes(prefix)){
+            operatorAktif='Indosat'; badge.innerText='Indosat Ooredoo'; badge.style.color='#fff'; badge.style.background='#eab308';
+        }
+        else if(['0831','0832','0833','0838'].includes(prefix)){
+            operatorAktif='Axis'; badge.innerText='AXIS'; badge.style.color='#fff'; badge.style.background='#a855f7';
+        }
+        else if(['0895','0896','0897','0898','0899'].includes(prefix)){
+            operatorAktif='TRI'; badge.innerText='Tri Indonesia'; badge.style.color='#fff'; badge.style.background='#10b981';
+        }
+        else{
+            operatorAktif=''; badge.innerText='Tidak Dikenal'; badge.style.color='#fff'; badge.style.background='#64748b';
+            produkTerpilih = null;
+        }
+    } else {
+        operatorAktif=''; badge.innerText='Menunggu nomor...'; badge.style.color='#64748b'; badge.style.background='#f1f5f9';
+        produkTerpilih = null;
+    }
+    render();
+    validasi();
+}
+
+document.getElementById('customerInput').addEventListener('input', function(e) {
+    let cleanValue = this.value.replace(/\D/g, '');
+    if (this.value !== cleanValue) {
+        this.value = cleanValue;
+    }
+    deteksiOperator(cleanValue);
+});
+
+function render(){
+    let wrapper = document.getElementById('productGrid');
+    wrapper.innerHTML = '';
+    
+    let kategoriData = produkData[kategoriAktif];
+    let originalData = null;
+
+    if(['pln', 'game', 'ewallet'].includes(kategoriAktif)) {
+        originalData = kategoriData || null;
+    } else {
+        if(!operatorAktif) {
+            wrapper.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color: #64748b; font-size:13px; padding: 20px 0;">Silahkan masukkan nomor HP valid Anda terlebih dahulu.</div>';
+            return;
+        }
+        originalData = kategoriData ? kategoriData[operatorAktif] : null;
+    }
+
+    if(!originalData || originalData.length === 0){
+        wrapper.innerHTML = '<div style="grid-column: 1/-1; text-align:center; color: #64748b; padding: 20px 0;">Maaf, Produk belum tersedia untuk layanan ini.</div>';
+        return;
+    }
+
+    let data = [...originalData];
+    data.sort((a, b) => a.harga - b.harga);
+
+    let groups = {};
+    
+    data.forEach(item => {
+        let kataNama = item.nama.trim().split(" ");
+        let groupName = kataNama.length > 0 ? kataNama[0] : "Lainnya";
+        
+        if (kataNama[0] === "Internet" || kataNama[0] === "Unlimited") {
+            groupName = kataNama[0] + " " + (kataNama[1] || "");
+        }
+
+        if (!groups[groupName]) groups[groupName] = [];
+        groups[groupName].push(item);
+    });
+
+    for (let keyGroupName in groups) {
+        let headerEl = document.createElement('div');
+        headerEl.className = 'group-header';
+        headerEl.style.gridColumn = "1 / -1";
+        headerEl.innerHTML = `<i class="fa-solid fa-tags"></i>  ${keyGroupName}`;
+        wrapper.appendChild(headerEl);
+        
+        groups[keyGroupName].forEach(i => {
+            let isSelected = (produkTerpilih && produkTerpilih.kode === i.kode) ? 'selected' : '';
+            
+            let itemEl = document.createElement('div');
+            itemEl.className = `product-item ${isSelected}`;
+            itemEl.dataset.kode = i.kode;
+            itemEl.dataset.nama = i.nama;
+            itemEl.dataset.harga = i.harga;
+            itemEl.addEventListener('click', function() {
+                document.querySelectorAll('.product-item').forEach(c => c.classList.remove('selected'));
+                this.classList.add('selected');
+                produkTerpilih = {kode: this.dataset.kode, nama: this.dataset.nama, harga: this.dataset.harga};
+                validasi();
+            });
+
+            itemEl.innerHTML = `
+                <div class="product-item-left">
+                    <div class="prod-title">${i.nama}</div>
+                    <div class="prod-desc">${i.deskripsi || 'Produk Kilat Bagus'}</div>
+                </div>
+                <div class="prod-price">Rp ${FormatNominal(i.harga)}</div>
+            `;
+            wrapper.appendChild(itemEl);
+        });
+    }
+
+    jalankanFilterProduk();
+}
+
+function FormatNominal(nilai) {
+    return nilai.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+function validasi(){
+    let noRaw = document.getElementById('customerInput').value;
+    let noClean = noRaw.replace(/\D/g, '');
+    let btn = document.getElementById('btnSubmit');
+    
+    let noValid = false;
+
+    if(['pln', 'game', 'ewallet'].includes(kategoriAktif)) {
+        noValid = noClean.length >= 4;
+    } else {
+        let regexHp = /^08[0-9]{8,11}$/; 
+        noValid = regexHp.test(noClean);
+    }
+
+    if(noValid && produkTerpilih && navigator.onLine){
+        btn.disabled = false;
+    } else {
+        btn.disabled = true;
+    }
+}
+
+document.querySelectorAll('#menuGrid .grid-item').forEach(item => {
+    item.addEventListener('click', function() {
+        kategoriAktif = this.getAttribute('data-id');
+        let namaLayanan = this.querySelector('span').innerText;
+        
+        let inputLabel = document.getElementById('inputLabel');
+        let customerInput = document.getElementById('customerInput');
+
+        if(kategoriAktif === 'pln') {
+            inputLabel.innerText = "Nomor Meter / ID Pelanggan";
+            customerInput.placeholder = "Contoh: 51234567890";
+        } else if (kategoriAktif === 'game') {
+            inputLabel.innerText = "ID Game / User ID";
+            customerInput.placeholder = "Contoh: 12345678 (2024)";
+        } else if (kategoriAktif === 'ewallet') {
+            inputLabel.innerText = "Nomor HP Akun E-Wallet";
+            customerInput.placeholder = "Contoh: 08123456789";
+        } else {
+            inputLabel.innerText = "Nomor Tujuan";
+            customerInput.placeholder = "Contoh: 081234567890";
+        }
+
+        document.getElementById('pageTitle').innerText = "Layanan " + namaLayanan;
+        document.getElementById('mainView').style.display = 'none';
+        document.getElementById('transactionPage').style.display = 'block';
+        
+        if (!history.state || history.state.page !== 'transaction') {
+            history.pushState({page: 'transaction'}, "");
+        }
+        
+        customerInput.value = '';
+        document.getElementById('searchProduct').value = ''; 
+        operatorAktif = '';
+        produkTerpilih = null;
+        
+        deteksiOperator('');
+    });
+});
+
+document.getElementById('btnBack').addEventListener('click', function(e) {
+    e.preventDefault(); 
+    if (history.state && history.state.page === 'transaction') {
+        history.back();
+    } else {
+        document.getElementById('transactionPage').style.display = 'none';
+        document.getElementById('mainView').style.display = 'block';
+    }
+});
+
+window.addEventListener('popstate', function(event) {
+    document.getElementById('transactionPage').style.display = 'none';
+    document.getElementById('mainView').style.display = 'block';
+});
+
+document.getElementById('btnSubmit').addEventListener('click', function() {
+    let btn = this;
+    let noHp = document.getElementById('customerInput').value.replace(/\D/g, '');
+
+    btn.disabled = true;
+    btn.innerHTML = "<i class='fa-solid fa-spinner fa-spin'></i> Memproses Transaksi...";
+
+    let dataPayload = {
+        nomor_hp: noHp,
+        kode_produk: produkTerpilih.kode,
+        total_harga: produkTerpilih.harga
+    };
+
+    fetch('proses_transaksi.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dataPayload)
+    })
+    .then(response => { if(!response.ok) throw new Error(); return response.json(); })
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Sukses Buat Pesanan!');
+            if(data.redirect_url) window.location.href = data.redirect_url;
+        } else {
+            alert('Gagal: ' + data.message);
+            ResetTombolBeli();
+        }
+    })
+    .catch(() => {
+        alert('Simulasi Transaksi Berhasil!\nLayanan: ' + kategoriAktif.toUpperCase() + '\nID/Nomor: ' + noHp + '\nProduk: ' + produkTerpilih.nama + '\nHarga: Rp ' + FormatNominal(produkTerpilih.harga));
+        ResetTombolBeli();
+    });
+});
+
+function ResetTombolBeli() {
+    let btn = document.getElementById('btnSubmit');
+    btn.disabled = false;
+    btn.innerText = "Proses Transaksi";
+}
+
+function jalankanFilterProduk() {
+    let filter = document.getElementById('searchProduct').value.toLowerCase();
+    let productItems = document.querySelectorAll('#productGrid .product-item');
+    let groupHeaders = document.querySelectorAll('#productGrid .group-header');
+
+    productItems.forEach(item => {
+        let title = item.querySelector('.prod-title').innerText.toLowerCase();
+        let desc = item.querySelector('.prod-desc').innerText.toLowerCase();
+        
+        if (title.includes(filter) || desc.includes(filter)) {
+            item.style.display = "flex";
+        } else {
+            item.style.display = "none";
+        }
+    });
+
+    groupHeaders.forEach(header => {
+        let nextEl = header.nextElementSibling;
+        let hasVisibleProduct = false;
+        
+        while (nextEl && nextEl.classList.contains('product-item')) {
+            if (nextEl.style.display !== 'none') {
+                hasVisibleProduct = true;
+                break;
+            }
+            nextEl = nextEl.nextElementSibling;
+        }
+        header.style.display = hasVisibleProduct ? "flex" : "none";
+    });
+}
+
+document.getElementById('searchProduct').addEventListener('input', jalankanFilterProduk);
+
+perbaruiStatusInternet();
+sinkronisasiProduk();
+</script>
+</body>
+</html>
