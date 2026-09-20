@@ -623,7 +623,7 @@ const backupProdukData = {
 produkData = backupProdukData;
 
 function sinkronisasiProduk() {
-    fetch('api/ambil_produk_ready.php')
+    fetch('Api/ambil_produk_ready.php')
     .then(res => { if(!res.ok) throw new Error(); return res.json(); })
     .then(data => { 
         if(data && Object.keys(data).length > 0) {
